@@ -4,11 +4,12 @@
   "description": "A roguelike RTS.  Get it?",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
