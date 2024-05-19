@@ -1,6 +1,8 @@
-import { Application, Sprite, Texture, Ticker, Container } from "pixi.js"
+import { Application, Ticker, Container } from "pixi.js"
 
 import { COLORS } from "./colors"
+import { TextSprite, TileSprite } from "./text_sprite"
+import { GameMap, randomTiles } from "./map"
 
 // Create the application
 const app = new Application()
@@ -10,69 +12,32 @@ await app.init({ resizeTo: window, background: COLORS["terminal black"], antiali
 // @ts-ignore
 document.body.appendChild(app.canvas)
 
-class TextSprite {
-    text: string
-    color: string
-    canvas: HTMLCanvasElement
-    ctx: CanvasRenderingContext2D
-    sprite: Sprite
 
-    constructor(text: string, color: string) {
-        this.text = text
-        this.color = color
-        this.canvas = document.createElement('canvas')
-        this.canvas.width = 24
-        this.canvas.height = 24
-        this.ctx = this.canvas.getContext("2d")
-        this.ctx.font = "24px serif"
-        this.ctx.fillStyle = this.color
-        this.ctx.textBaseline = "middle"
-        this.ctx.textAlign = "center"
-        this.ctx.fillText(this.text, 12, 12)
-        this.sprite = new Sprite(Texture.from(this.canvas))
-    }
+const ROWS = 41
+const COLS = 21
 
-    redraw() {
-        this.ctx.clearRect(0, 0, 24, 24)
-        this.ctx.fillText(this.text, 12, 12)
-    }
-}
-
-const ROWS = 60
-const COLS = 20
-
-let background = new Container()
 let foreground = new Container()
 
-let backgroundSprites: Array<Array<TextSprite>> = []
+let backgroundTiles = randomTiles(ROWS, COLS)
 
-for (let row = 0; row < ROWS; row++) {
-    backgroundSprites.push([])
-    for (let col = 0; col < COLS; col++) {
-        let type = Math.floor(Math.random() * 3)
-        let sprite = new TextSprite(type === 2 ? "\"" : type === 1 ? "'" : ",", COLORS["terminal green"])
-        sprite.sprite.position.set(row * 24, col* 24)
-        background.addChild(sprite.sprite)
-        backgroundSprites[row].push(sprite)
-    }
-}
+let gameMap = new GameMap(ROWS, COLS, backgroundTiles)
 
 const MESSAGE = "TESTING"
 let ind = -1
 
 let character = new TextSprite("@", COLORS["terminal amber"])
 let currLoc = {
-    x: 30,
+    x: 20,
     y: 10
 }
 let oldLoc = {
-    x: 30,
+    x: 20,
     y: 10
 }
 
 foreground.addChild(character.sprite)
 
-app.stage.addChild(background)
+app.stage.addChild(gameMap.background)
 app.stage.addChild(foreground)
 
 function tick() {
@@ -125,8 +90,8 @@ function update(ticker: Ticker) {
         lastTick += 1000
     }
 
-    background.x = (app.renderer.width - ROWS * 24) / 2
-    background.y = (app.renderer.height - COLS * 24) / 2
+    gameMap.background.x = (app.renderer.width - ROWS * 24) / 2
+    gameMap.background.y = (app.renderer.height - COLS * 24) / 2
 
     foreground.x = (app.renderer.width - ROWS * 24) / 2
     foreground.y = (app.renderer.height - COLS * 24) / 2
@@ -138,12 +103,12 @@ function update(ticker: Ticker) {
 
     for (let row = 0; row < ROWS; row++) {
         for (let col = 0; col < COLS; col++) {
-            let sprite = backgroundSprites[row][col]
-            let overlapX = Math.max(0, 24 + Math.min(sprite.sprite.x, character.sprite.x) - Math.max(sprite.sprite.x, character.sprite.x))
-            let overlapY = Math.max(0, 24 + Math.min(sprite.sprite.y, character.sprite.y) - Math.max(sprite.sprite.y, character.sprite.y))
+            let tile = gameMap.backgroundTiles[row][col]
+            let overlapX = Math.max(0, 24 + Math.min(tile.tile.x, character.sprite.x) - Math.max(tile.tile.x, character.sprite.x))
+            let overlapY = Math.max(0, 24 + Math.min(tile.tile.y, character.sprite.y) - Math.max(tile.tile.y, character.sprite.y))
 
             let overlap = Math.min(overlapX, overlapY) / 24
-            sprite.sprite.alpha = 1 - overlap
+            tile.sprite.alpha = 1 - overlap
         }
     }
 }
