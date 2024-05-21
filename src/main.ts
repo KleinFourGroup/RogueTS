@@ -3,6 +3,7 @@ import { Application, Ticker, Container } from "pixi.js"
 import { COLORS } from "./colors"
 import { TextSprite, TileSprite } from "./text_sprite"
 import { GameMap, randomTiles } from "./map"
+import { Entity } from "./entities"
 
 // Create the application
 const app = new Application()
@@ -25,24 +26,24 @@ let gameMap = new GameMap(ROWS, COLS, backgroundTiles)
 const MESSAGE = "TESTING"
 let ind = -1
 
-let character = new TextSprite("@", COLORS["terminal amber"])
-let currLoc = {
+let character = new Entity("@@")
+character.currLoc = {
     x: 20,
     y: 10
 }
-let oldLoc = {
+character.oldLoc = {
     x: 20,
     y: 10
 }
 
-foreground.addChild(character.sprite)
+foreground.addChild(character.sprite.sprite)
 
 app.stage.addChild(gameMap.background)
 app.stage.addChild(foreground)
 
 function tick() {
-    oldLoc.x = currLoc.x
-    oldLoc.y = currLoc.y
+    character.oldLoc.x = character.currLoc.x
+    character.oldLoc.y = character.currLoc.y
     let searching = true
     while (searching) {
         let rand = Math.floor(Math.random() * 4)
@@ -65,17 +66,17 @@ function tick() {
                 console.error("Uh oh...")
         }
 
-        if (0 <= currLoc.x + dx && currLoc.x + dx < ROWS && 0 <= currLoc.y + dy && currLoc.y + dy < COLS) {
-            currLoc.x += dx
-            currLoc.y += dy
+        if (0 <= character.currLoc.x + dx && character.currLoc.x + dx < ROWS && 0 <= character.currLoc.y + dy && character.currLoc.y + dy < COLS) {
+            character.currLoc.x += dx
+            character.currLoc.y += dy
             searching = false
         }
     }
 
     ind = (ind + 1) % MESSAGE.length
-    character.text = MESSAGE[ind]
-    character.redraw()
-    character.sprite.texture.source.update()
+    character.sprite.text = MESSAGE[ind]
+    character.sprite.redraw()
+    character.sprite.sprite.texture.source.update()
 }
 
 let elapsed = 0.0
@@ -98,14 +99,14 @@ function update(ticker: Ticker) {
 
     let progress = (1 - Math.cos(Math.min((elapsed - lastTick) / 1000, 1) * Math.PI)) / 2
 
-    character.sprite.x = oldLoc.x * 24 * (1 - progress) + currLoc.x * 24 * progress
-    character.sprite.y = oldLoc.y * 24 * (1 - progress) + currLoc.y * 24 * progress
+    character.sprite.sprite.x = character.oldLoc.x * 24 * (1 - progress) + character.currLoc.x * 24 * progress
+    character.sprite.sprite.y = character.oldLoc.y * 24 * (1 - progress) + character.currLoc.y * 24 * progress
 
     for (let row = 0; row < ROWS; row++) {
         for (let col = 0; col < COLS; col++) {
             let tile = gameMap.backgroundTiles[row][col]
-            let overlapX = Math.max(0, 24 + Math.min(tile.tile.x, character.sprite.x) - Math.max(tile.tile.x, character.sprite.x))
-            let overlapY = Math.max(0, 24 + Math.min(tile.tile.y, character.sprite.y) - Math.max(tile.tile.y, character.sprite.y))
+            let overlapX = Math.max(0, 24 + Math.min(tile.tile.x, character.sprite.sprite.x) - Math.max(tile.tile.x, character.sprite.sprite.x))
+            let overlapY = Math.max(0, 24 + Math.min(tile.tile.y, character.sprite.sprite.y) - Math.max(tile.tile.y, character.sprite.sprite.y))
 
             let overlap = Math.min(overlapX, overlapY) / 24
             tile.sprite.alpha = 1 - overlap
